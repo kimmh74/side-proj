@@ -1,0 +1,71 @@
+package com.kmh.kamco.service;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.kmh.kamco.dto.KamcoApiResponse;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+@Service
+public class KamcoApiService {
+
+    @Value("${kamco.api.url}")
+    private String apiUrl;
+
+    @Value("${kamco.api.service-key}")
+    private String serviceKey;
+
+    private final RestTemplate restTemplate;
+    private final XmlMapper xmlMapper;
+
+    public KamcoApiService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        this.xmlMapper = new XmlMapper();
+        this.xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    // numOfRows 파라미터를 제거하고, 항상 100을 사용하도록 수정합니다.
+    public KamcoApiResponse getAuctionItems(String pageNo) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(apiUrl) // (1) 기본 URL
+                .queryParam("serviceKey", serviceKey)  // (2) 서비스 키 추가
+                .queryParam("pageNo", pageNo)         // (3) 페이지 번호 추가
+                .queryParam("numOfRows", "100");      // (4) 고정값 100건 추가
+
+        String url = uriBuilder.build().toUriString(); // 최종 URL 생성
+        System.out.println(">>> KAMCO API 호출 URL: " + url); // 로그로 확인
+
+        try {
+            String xmlResponse = restTemplate.getForObject(url, String.class);
+            
+            if (xmlResponse == null || xmlResponse.isEmpty()) {
+                System.err.println("KAMCO API로부터 빈 응답을 받았습니다.");
+                return null;
+            }
+            
+            System.out.println(">>> KAMCO API XML 응답: \n" + xmlResponse);
+            
+            return xmlMapper.readValue(xmlResponse, KamcoApiResponse.class);
+            
+        } catch (HttpClientErrorException e) {
+            System.err.println("클라이언트 오류 발생 (4xx): " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            return null;
+        } catch (HttpServerErrorException e) {
+            System.err.println("서버 오류 발생 (5xx): " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            return null;
+        } catch (ResourceAccessException e) {
+            System.err.println("네트워크 연결 오류: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            System.err.println("KAMCO API 호출 중 알 수 없는 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+}

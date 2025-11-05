@@ -1,0 +1,52 @@
+package com.kmh.kamco.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.kmh.kamco.dto.KamcoApiResponse;
+
+@Service
+public class KamcoApiService {
+	
+
+	   
+
+    @Value("${kamco.api.url}")
+    private String apiUrl;
+
+    @Value("${kamco.api.service-key}")
+    private String serviceKey;
+
+    private final RestTemplate restTemplate;
+    private final XmlMapper xmlMapper;
+
+    public KamcoApiService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        this.xmlMapper = new XmlMapper(); // XML 매퍼 인스턴스 생성
+    }
+
+    public KamcoApiResponse getAuctionItems(String pageNo, String numOfRows) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("pageNo", pageNo)         // 페이지 번호
+                .queryParam("numOfRows", numOfRows);   // 한 페이지 결과 수
+
+        String url = uriBuilder.build().toUriString();
+        System.out.println("Calling URL: " + url); // 디버깅을 위해 호출 URL 출력
+
+        try {
+            // String으로 응답을 받아와 XML Mapper로 파싱
+            String xmlResponse = restTemplate.getForObject(url, String.class);
+            if (xmlResponse != null) {
+                return xmlMapper.readValue(xmlResponse, KamcoApiResponse.class);
+            }
+        } catch (Exception e) {
+            System.err.println("Error calling KAMCO API: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+}

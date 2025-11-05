@@ -1,0 +1,47 @@
+package com.kmh.kamco.dto;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import lombok.Data; // Lombok의 @Data 어노테이션 임포트
+
+@Data // <-- 이 어노테이션 하나로 Getter, Setter, ToString, EqualsAndHashCode가 자동으로 생성됩니다.
+public class Item {
+    @JacksonXmlProperty(localName = "onbidNum")
+    private String onbidNum;
+
+    @JacksonXmlProperty(localName = "itemName")
+    private String itemName;
+
+    // XML 응답의 태그 이름과 대소문자까지 정확히 일치시켜주세요. (로그 확인이 필수!)
+    @JacksonXmlProperty(localName = "RNUM")
+    private String RNUM;
+
+    @JacksonXmlProperty(localName = "PLNM_NO")
+    private String PLNM_NO;
+
+    @JacksonXmlProperty(localName = "PBCT_NO")
+    private String PBCT_NO;
+
+    @JacksonXmlProperty(localName = "PBCT_CDTN_NO")
+    private String PBCT_CDTN_NO;
+
+    @JacksonXmlProperty(localName = "CLTR_NO")
+    private String CLTR_NO;
+
+    @JacksonXmlProperty(localName = "CLTR_HSTR_NO")
+    private String CLTR_HSTR_NO;
+
+    @JacksonXmlProperty(localName = "SCRN_GRP_CD")
+    private String SCRN_GRP_CD;
+
+    @JacksonXmlProperty(localName = "CTGR_FULL_NM")
+    private String CTGR_FULL_NM;
+
+    // 만약 KAMCO API 응답에 더 많은 필드가 있다면 계속 추가해나가시면 됩니다.
+    // 예시:
+    // @JacksonXmlProperty(localName = "PRPT_KD_NM")
+    // private String PRPT_KD_NM;
+    // @JacksonXmlProperty(localName = "AUCT_STRT_DT")
+    // private String AUCT_STRT_DT;
+
+    // 모든 Getter, Setter, toString() 등은 @Data 어노테이션이 자동으로 생성해주므로,
+    // 이 코드 내에서는 직접 작성할 필요가 없습니다.
+}

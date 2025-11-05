@@ -1,0 +1,81 @@
+package com.kmh.kamco.service;
+
+//src/main/java/com/example/kamco/service/KamcoApiService.java
+package com.example.kamco.service;
+
+import com.example.kamco.dto.KamcoApiResponse;
+import com.fasterxml.jackson.databind.DeserializationFeature; // <-- 추가
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+@Service
+public class KamcoApiService {
+
+ @Value("${kamco.api.url}")
+ private String apiUrl;
+
+ @Value("${kamco.api.service-key}")
+ private String serviceKey;
+
+ private final RestTemplate restTemplate;
+ private final XmlMapper xmlMapper;
+
+ public KamcoApiService(RestTemplate restTemplate) {
+     this.restTemplate = restTemplate;
+     this.xmlMapper = new XmlMapper();
+     // --- 여기를 수정했습니다. ---
+     // DTO에 정의되지 않은 XML 필드를 무시하도록 설정합니다.
+     this.xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+     // ------------------------
+ }
+
+ public KamcoApiResponse getAuctionItems(String pageNo) {
+     UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(apiUrl)
+             .queryParam("serviceKey", serviceKey)
+             .queryParam("pageNo", pageNo)
+             .queryParam("numOfRows", "100");
+
+     String url = uriBuilder.build().toUriString();
+     System.out.println(">>> KAMCO API 호출 URL: " + url);
+
+     try {
+         String xmlResponse = restTemplate.getForObject(url, String.class);
+
+         if (xmlResponse == null || xmlResponse.isEmpty()) {
+             System.err.println("KAMCO API로부터 빈 응답을 받았습니다.");
+             return null;
+         }
+
+         System.out.println(">>> KAMCO API XML 응답: \n" + xmlResponse);
+
+         return xmlMapper.readValue(xmlResponse, KamcoApiResponse.class);
+
+     } catch (HttpClientErrorException e) {
+         System.err.println("클라이언트 오류 발생 (4xx): " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+         return null;
+     } catch (HttpServerErrorException e) {
+         System.err.println("서버 오류 발생 (5xx): " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+         return null;
+     } catch (ResourceAccessException e) {
+         System.err.println("네트워크 연결 오류: " + e.getMessage());
+         e.printStackTrace();
+         return null;
+     } catch (Exception e) {
+         System.err.println("KAMCO API 응답 파싱 중 오류 발생: " + e.getMessage());
+         e.printStackTrace();
+         // 파싱 오류임을 알리는 Dummy KamcoApiResponse를 생성하여 반환
+         KamcoApiResponse errorResponse = new KamcoApiResponse();
+         // Header는 null이면 에러가 발생할 수 있으니 안전하게 초기화
+         errorResponse.setHeader(new com.example.kamco.dto.Header());
+         errorResponse.getHeader().setResultCode("99"); // 임시 에러 코드
+         errorResponse.getHeader().setResultMsg("KAMCO API 응답 파싱 오류 발생: " + e.getMessage());
+         return errorResponse;
+     }
+ }
+}

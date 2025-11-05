@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>KAMCO 공매물건 조회</title>
+    <style>
+        /* (스타일은 이전과 동일하므로 생략 - 이전 버전의 최신 스타일을 그대로 사용) */
+        /* 기본 스타일 및 글꼴 설정 */
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #343a40;
+            line-height: 1.6;
+        }
+
+        /* 헤더 스타일 */
+        h1 {
+            color: #212529;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            font-weight: bold;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* 오류/정보 메시지 스타일 */
+        .message {
+            background-color: #ffe0e0;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* 테이블 컨테이너 스타일 (가로 스크롤을 위해 필요) */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+        }
+
+        /* 테이블 기본 스타일 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        /* 테이블 헤더 스타일 */
+        th {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+            font-weight: bold;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* 테이블 데이터 셀 스타일 */
+        td {
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 테이블 홀수/짝수 행 배경색 (Zebra striping) */
+        tbody tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* 테이블 행 마우스 오버 시 효과 */
+        tbody tr:hover {
+            background-color: #e9ecef;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        /* 페이지네이션 스타일 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .pagination a {
+            text-decoration: none;
+            color: #007bff;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+
+        .pagination a:hover {
+            background-color: #007bff;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .pagination span.current {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* "조회된 공매 물건이 없습니다." 메시지 */
+        .no-data-message {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <h1>KAMCO 공매물건 목록</h1>
+
+    <div th:if="${message}" class="message">
+        <p th:text="${message}"></p>
+    </div>
+
+    <div th:if="${items != null and not #lists.isEmpty(items)}">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>순번(RNUM)</th>
+                        <th>공고번호(PLNM_NO)</th>
+                        <th>공고조건번호(PBCT_CDTN_NO)</th>
+                        <th>물건관리번호(CLTR_NO)</th>
+                        <th>물건이력번호(CLTR_HSTR_NO)</th>
+                        <th>화면그룹코드(SCRN_GRP_CD)</th>
+                        <th>카테고리명(CTGR_FULL_NM)</th>
+                        <th>입찰물건관리번호(BID_MNMT_NO)</th>
+                        <th>물건이름(CLTR_NM)</th>
+                        <th>물건관리번호(CLTR_MNMT_NO)</th>
+                        <th>지번주소(LDNM_ADRS)</th>
+                        <th>도로명주소(NMRD_ADRS)</th>
+                        <th>지번PNU(LDNM_PNU)</th>
+                        <th>처분방식코드(DPSL_MTD_CD)</th>
+                        <th>처분방식명(DPSL_MTD_NM)</th>
+                        <th>최저입찰가격(MIN_BID_PRC)</th>
+                        <th>감정평가평균액(APSL_ASES_AVG_AMT)</th>
+                        <th>수수료율(FEE_RATE)</th>
+                        <th>공고개시일시(PBCT_BEGN_DTM)</th>
+                        <th>공고마감일시(PBCT_CLS_DTM)</th>
+                        <th>공매물건상태명(PBCT_CLTR_STAT_NM)</th>
+                        <th>이용된 입찰건수(USCBD_CNT)</th>
+                        <th>조회수(IQRY_CNT)</th>
+                        <th>상품명(GOODS_NM)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${items}">
+                        <td th:text="${item.RNUM ?: '-'}"></td>
+                        <td th:text="${item.PLNM_NO ?: '-'}"></td>
+                        <td th:text="${item.PBCT_CDTN_NO ?: '-'}"></td>
+                        <td th:text="${item.CLTR_NO ?: '-'}"></td>
+                        <td th:text="${item.CLTR_HSTR_NO ?: '-'}"></td>
+                        <td th:text="${item.SCRN_GRP_CD ?: '-'}"></td>
+                        <td th:text="${item.CTGR_FULL_NM ?: '-'}"></td>
+                        <td th:text="${item.BID_MNMT_NO ?: '-'}"></td>
+                        <td th:text="${item.CLTR_NM ?: '-'}"></td>
+                        <td th:text="${item.CLTR_MNMT_NO ?: '-'}"></td>
+                        <td th:text="${item.LDNM_ADRS ?: '-'}"></td>
+                        <td th:text="${item.NMRD_ADRS ?: '-'}"></td>
+                        <td th:text="${item.LDNM_PNU ?: '-'}"></td>
+                        <td th:text="${item.DPSL_MTD_CD ?: '-'}"></td>
+                        <td th:text="${item.DPSL_MTD_NM ?: '-'}"></td>
+                        <td th:text="${item.MIN_BID_PRC ?: '-'}"></td>
+                        <td th:text="${item.APSL_ASES_AVG_AMT ?: '-'}"></td>
+                        <td th:text="${item.FEE_RATE ?: '-'}"></td>
+                        <td th:text="${item.PBCT_BEGN_DTM ?: '-'}"></td>
+                        <td th:text="${item.PBCT_CLS_DTM ?: '-'}"></td>
+                        <td th:text="${item.PBCT_CLTR_STAT_NM ?: '-'}"></td>
+                        <td th:text="${item.USCBD_CNT ?: '-'}"></td>
+                        <td th:text="${item.IQRY_CNT ?: '-'}"></td>
+                        <td th:text="${item.GOODS_NM ?: '-'}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 처리 -->
+        <div class="pagination">
+            <!-- 이전 페이지 그룹으로 이동 -->
+            <a th:href="@{/auction(pageNo=${(startPage - PAGE_GROUP_SIZE > 0) ? startPage - PAGE_GROUP_SIZE : 1})}"
+               th:if="${startPage > 1}" th:text="« 이전"></a>
+
+            <!-- 이전 페이지로 이동 -->
+            <a th:href="@{/auction(pageNo=${currentPage - 1})}"
+               th:if="${currentPage > 1}" th:text="‹"></a>
+
+            <!-- 페이지 번호 목록 -->
+            <th:block th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}">
+                <!-- 현재 페이지보다 다음 페이지로 가는 링크는 다음 데이터가 있을 때만 활성화 (임시 조건) -->
+                <span th:if="${pageNumber == currentPage}" class="current" th:text="${pageNumber}"></span>
+                <a th:href="@{/auction(pageNo=${pageNumber})}"
+                   th:unless="${pageNumber == currentPage or (pageNumber > currentPage and !hasNextPage)}"
+                   th:text="${pageNumber}"></a>
+                <!-- 다음 페이지로 갈 수 없는데 페이지 번호만 표시되는 경우를 위한 처리: 다음 페이지 번호는 클릭되지 않도록 함 -->
+                <span th:if="${pageNumber > currentPage and !hasNextPage}" th:text="${pageNumber}"></span>
+            </th:block>
+
+
+            <!-- 다음 페이지로 이동 -->
+            <a th:href="@{/auction(pageNo=${currentPage + 1})}" th:if="${hasNextPage}" th:text="›"></a>
+
+            <!-- 다음 페이지 그룹으로 이동 -->
+            <a th:href="@{/auction(pageNo=${endPage + 1})}"
+               th:if="${hasNextPage}" th:text="다음 »"></a>
+        </div>
+    </div>
+    <div th:if="${items == null or #lists.isEmpty(items)} and !${message}" class="no-data-message">
+        <p>조회된 공매 물건이 없습니다.</p>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+package com.kmh.kamco.dto;
+
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
+//이 클래스 내 필드들은 KAMCO API 공매물건 리스트의 상세 항목에 따라 정의해야 합니다.
+public class Item {
+ @JacksonXmlProperty(localName = "onbidNum") // 예시: 온비드 관리번호
+ private String onbidNum;
+
+ @JacksonXmlProperty(localName = "itemName") // 예시: 물건명
+ private String itemName;
+ 
+ @JacksonXmlProperty(localName = "RNUM") // <-- 이 부분을 추가해주세요!
+ private String RNUM; // XML 응답에 "RNUM" 필드가 있다면 추가합니다.
+ 
+ @JacksonXmlProperty(localName = "PLNM_NO") // <-- 이 부분을 추가해주세요!
+ private String PLNM_NO; // 공고번호로 추정됩니다.
+ 
+ @JacksonXmlProperty(localName = "PBCT_NO") // <-- 이 부분을 추가해주세요!
+ private String PBCT_NO; // '공고번호'로 추정됩니다.
+ 
+ @JacksonXmlProperty(localName = "PBCT_CDTN_NO") // <-- 이 부분을 추가해주세요!
+ private String PBCT_CDTN_NO; // 공매조건번호로 추정됩니다.
+
+ @JacksonXmlProperty(localName = "CLTR_NO") // <-- 이 부분을 추가해주세요!
+ private String CLTR_NO; // 물건관리번호로 추정됩니다.
+ 
+ @JacksonXmlProperty(localName = "CLTR_HSTR_NO") // <-- 이 부분을 추가해주세요!
+ private String CLTR_HSTR_NO; // 물건 이력 번호로 추정됩니다.
+ 
+ @JacksonXmlProperty(localName = "SCRN_GRP_CD") // <-- 이 부분을 추가해주세요!
+ private String SCRN_GRP_CD; // 화면그룹코드로 추정됩니다.
+ 
+ // ... 필요한 필드를 추가해주세요. (예: 공고일, 최저입찰가, 소재지 등)
+
+ // Getters and Setters
+ public String getOnbidNum() {
+     return onbidNum;
+ }
+
+ public void setOnbidNum(String onbidNum) {
+     this.onbidNum = onbidNum;
+ }
+
+ public String getItemName() {
+     return itemName;
+ }
+
+ public void setItemName(String itemName) {
+     this.itemName = itemName;
+ }
+ 
+ // RNUM 필드에 대한 Getter와 Setter를 추가합니다.
+ public String getRNUM() {
+     return RNUM;
+ }
+ 
+ public void setRNUM(String RNUM) {
+     this.RNUM = RNUM;
+ }
+ 
+ public String getPLNM_NO() { // PLNM_NO의 Getter
+     return PLNM_NO;
+ }
+
+ public void setPLNM_NO(String PLNM_NO) { // PLNM_NO의 Setter
+     this.PLNM_NO = PLNM_NO;
+ }
+
+ public String getPBCT_NO() { // PBCT_NO의 Getter
+     return PBCT_NO;
+ }
+
+ public void setPBCT_NO(String PBCT_NO) { // PBCT_NO의 Setter
+     this.PBCT_NO = PBCT_NO;
+ }
+ 
+ public String getPBCT_CDTN_NO() { // PBCT_CDTN_NO의 Getter
+     return PBCT_CDTN_NO;
+ }
+
+ public void setPBCT_CDTN_NO(String PBCT_CDTN_NO) { // PBCT_CDTN_NO의 Setter
+     this.PBCT_CDTN_NO = PBCT_CDTN_NO;
+ }
+ 
+ public String getCLTR_NO() { // CLTR_NO의 Getter
+     return CLTR_NO;
+ }
+
+ public void setCLTR_NO(String CLTR_NO) { // CLTR_NO의 Setter
+     this.CLTR_NO = CLTR_NO;
+ }
+ public String getCLTR_HSTR_NO() { // CLTR_HSTR_NO의 Getter
+     return CLTR_HSTR_NO;
+ }
+
+ public void setCLTR_HSTR_NO(String CLTR_HSTR_NO) { // CLTR_HSTR_NO의 Setter
+     this.CLTR_HSTR_NO = CLTR_HSTR_NO;
+ }
+ 
+ public String getSCRN_GRP_CD() { // SCRN_GRP_CD의 Getter
+     return SCRN_GRP_CD;
+ }
+
+ public void setSCRN_GRP_CD(String SCRN_GRP_CD) { // SCRN_GRP_CD의 Setter
+     this.SCRN_GRP_CD = SCRN_GRP_CD;
+ }
+ 
+ // ... 추가된 필드들에 대한 Getter/Setter를 여기에 작성해주세요 ...
+ 
+ 
+ @Override
+ public String toString() {
+     return "Item{" +
+             "onbidNum='" + onbidNum + '\'' +
+             ", itemName='" + itemName + '\'' +
+             ", RNUM='" + RNUM + '\'' +
+             ", PLNM_NO='" + PLNM_NO + '\'' +
+             ", PBCT_NO='" + PBCT_NO + '\'' +
+             ", PBCT_CDTN_NO='" + PBCT_CDTN_NO + '\'' +
+             ", CLTR_NO='" + CLTR_NO + '\'' +
+             ", CLTR_HSTR_NO='" + CLTR_HSTR_NO + '\'' +
+             ", SCRN_GRP_CD='" + SCRN_GRP_CD + '\'' + // toString에도 추가
+             // ... 다른 필드들도 여기에 추가 ...
+             '}';
+ }
+}

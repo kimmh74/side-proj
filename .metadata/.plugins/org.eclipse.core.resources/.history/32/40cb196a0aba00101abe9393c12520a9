@@ -1,0 +1,39 @@
+package com.kmh.kamco.dto;
+
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
+//이 클래스 내 필드들은 KAMCO API 공매물건 리스트의 상세 항목에 따라 정의해야 합니다.
+public class Item {
+ @JacksonXmlProperty(localName = "onbidNum") // 예시: 온비드 관리번호
+ private String onbidNum;
+
+ @JacksonXmlProperty(localName = "itemName") // 예시: 물건명
+ private String itemName;
+ 
+ // ... 필요한 필드를 추가해주세요. (예: 공고일, 최저입찰가, 소재지 등)
+
+ // Getters and Setters
+ public String getOnbidNum() {
+     return onbidNum;
+ }
+
+ public void setOnbidNum(String onbidNum) {
+     this.onbidNum = onbidNum;
+ }
+
+ public String getItemName() {
+     return itemName;
+ }
+
+ public void setItemName(String itemName) {
+     this.itemName = itemName;
+ }
+ 
+ @Override
+ public String toString() {
+     return "Item{" +
+             "onbidNum='" + onbidNum + '\'' +
+             ", itemName='" + itemName + '\'' +
+             '}';
+ }
+}

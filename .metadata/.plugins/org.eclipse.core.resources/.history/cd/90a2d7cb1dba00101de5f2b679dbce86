@@ -1,0 +1,128 @@
+// src/main/java/com/kmh/kamco/controller/KamcoController.java
+package com.kmh.kamco.controller;
+
+import com.kmh.kamco.dto.KamcoApiResponse;
+import com.kmh.kamco.dto.Item;
+import com.kmh.kamco.dto.SearchParams; // SearchParams DTO 임포트
+import com.kmh.kamco.service.KamcoApiService;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute; // @ModelAttribute 임포트
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class KamcoController {
+
+    private final KamcoApiService kamcoApiService;
+
+    // UI에서 한 번에 보여줄 아이템 수 (HTML 페이지 당)
+    private static final int UI_PAGE_SIZE = 50;
+    // KAMCO API 한 번 호출로 받아올 아이템 수
+    private static final int API_NUM_OF_ROWS = 100;
+    // UI 페이지 그룹 당 보여줄 페이지 번호 개수 (예: 1 2 3 4 5)
+    private static final int PAGE_GROUP_SIZE = 5;
+
+    // UI 페이지 하나를 커버하기 위해 필요한 API 호출 횟수 (100 / 50 = 2)
+    private static final int API_CALLS_PER_UI_PAGE_GROUP = API_NUM_OF_ROWS / UI_PAGE_SIZE;
+
+
+    public KamcoController(KamcoApiService kamcoApiService) {
+        this.kamcoApiService = kamcoApiService;
+    }
+
+    @GetMapping("/")
+    public String index(Model model) {
+        return "redirect:/auction";
+    }
+
+    @GetMapping("/auction")
+    public String getAuctionList(
+            @RequestParam(value = "pageNo", defaultValue = "1") int uiPageNo, // UI 상의 현재 페이지 번호
+            @ModelAttribute SearchParams searchParams, // 검색 파라미터를 SearchParams DTO로 받습니다.
+            Model model) {
+
+        List<Item> displayedItems = new ArrayList<>();
+        
+        int apiPageNo = ((uiPageNo - 1) / API_CALLS_PER_UI_PAGE_GROUP) + 1;
+        
+        int startIndexInApiResult = ((uiPageNo - 1) % API_CALLS_PER_UI_PAGE_GROUP) * UI_PAGE_SIZE;
+        int endIndexInApiResult = startIndexInApiResult + UI_PAGE_SIZE;
+
+        // SearchParams를 KamcoApiService로 전달
+        KamcoApiResponse response = kamcoApiService.getAuctionItems(
+                String.valueOf(apiPageNo),
+                String.valueOf(API_NUM_OF_ROWS),
+                searchParams // DTO 전체를 전달
+        );
+
+        boolean hasNextPage = false;
+
+        if (response != null && response.getHeader() != null) {
+            if ("00".equals(response.getHeader().getResultCode())) {
+                if (response.getBody() != null && response.getBody().getItemList() != null && !response.getBody().getItemList().isEmpty()) {
+                    Map<String, Item> itemMapByRNUM = new LinkedHashMap<>();
+                    
+                    for (Item item : response.getBody().getItemList()) {
+                        if (item != null && item.getRNUM() != null && !item.getRNUM().isEmpty()) {
+                            itemMapByRNUM.putIfAbsent(item.getRNUM(), item);
+                        }
+                    }
+
+                    List<Item> allFilteredItems = new ArrayList<>(itemMapByRNUM.values());
+                    
+                    if (startIndexInApiResult < allFilteredItems.size()) {
+                        int actualEndIndex = Math.min(endIndexInApiResult, allFilteredItems.size());
+                        displayedItems = allFilteredItems.subList(startIndexInApiResult, actualEndIndex);
+
+                        // 다음 페이지가 있는지 판단 (추정)
+                        if (uiPageNo < ((allFilteredItems.size() / UI_PAGE_SIZE) * API_CALLS_PER_UI_PAGE_GROUP) + (apiPageNo * API_CALLS_PER_UI_PAGE_GROUP) ) {
+                             hasNextPage = true;
+                        } else if (actualEndIndex < allFilteredItems.size()){
+                             hasNextPage = true;
+                        } else if(allFilteredItems.size() == API_NUM_OF_ROWS && uiPageNo % API_CALLS_PER_UI_PAGE_GROUP == 0) {
+                             hasNextPage = true;
+                        } else if (displayedItems.size() == UI_PAGE_SIZE) {
+                             hasNextPage = true;
+                        }
+                        
+                    } else {
+                        displayedItems = new ArrayList<>();
+                        hasNextPage = false;
+                    }
+
+                    model.addAttribute("items", displayedItems);
+                } else {
+                    model.addAttribute("message", "조회된 공매 물건이 없습니다.");
+                    hasNextPage = false;
+                }
+            } else if ("99".equals(response.getHeader().getResultCode())) {
+                model.addAttribute("message", response.getHeader().getResultMsg());
+                hasNextPage = false;
+            } else {
+                model.addAttribute("message", "API 호출 실패: " + response.getHeader().getResultMsg());
+                hasNextPage = false;
+            }
+        } else {
+            model.addAttribute("message", "API 호출 실패: 응답을 받지 못했습니다. (네트워크 문제 또는 예상치 못한 서비스 오류)");
+            hasNextPage = false;
+        }
+
+        // 페이지네이션 그룹 계산
+        int startPage = ((uiPageNo - 1) / PAGE_GROUP_SIZE) * PAGE_GROUP_SIZE + 1;
+        int endPage = startPage + PAGE_GROUP_SIZE - 1;
+
+        model.addAttribute("currentPage", uiPageNo);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("hasNextPage", hasNextPage);
+        model.addAttribute("searchParams", searchParams); // 검색 파라미터를 모델에 추가하여 검색 폼에 유지하고 페이지네이션 링크에도 사용
+        
+        return "auctionList";
+    }
+}

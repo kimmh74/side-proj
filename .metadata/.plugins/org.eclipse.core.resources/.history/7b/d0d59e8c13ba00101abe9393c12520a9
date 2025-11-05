@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>KAMCO 공매물건 조회</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .pagination a { margin: 0 5px; text-decoration: none; color: #007bff; }
+        .pagination a.current { font-weight: bold; color: #333; }
+        .message { color: red; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>KAMCO 공매물건 목록</h1>
+
+    <div th:if="${message}" class="message">
+        <p th:text="${message}"></p>
+    </div>
+
+    <div th:if="${items != null and not #lists.isEmpty(items)}">
+        <table>
+            <thead>
+                <tr>
+                    <th>온비드 관리번호</th>
+                    <th>물건명</th>
+                    <!-- 여기에 KAMCO API Item DTO에 정의한 다른 필드들을 추가하세요 -->
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.onbidNum}"></td>
+                    <td th:text="${item.itemName}"></td>
+                    <!-- item에 정의한 다른 필드들을 여기에 출력 -->
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 간단한 페이징 처리 예시 -->
+        <div class="pagination" style="margin-top: 20px;">
+            <a th:href="@{/auction(pageNo=${currentPage - 1 > 0 ? currentPage - 1 : 1})}"
+               th:text="이전" th:if="${currentPage > 1}"></a>
+            <a th:href="@{/auction(pageNo=${currentPage})}"
+               th:text="${currentPage}" class="current"></a>
+            <a th:href="@{/auction(pageNo=${currentPage + 1})}" th:text="다음"></a>
+        </div>
+    </div>
+    <div th:if="${items == null or #lists.isEmpty(items)} and !${message}">
+        <p>조회된 공매 물건이 없습니다.</p>
+    </div>
+
+</body>
+</html>

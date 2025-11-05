@@ -1,0 +1,5 @@
+package com.kmh.kamco.service;
+
+public class KamcoApiService {
+
+}

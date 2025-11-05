@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>KAMCO 공매물건 조회</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            white-space: nowrap;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background-color: #f2f2f2; position: sticky; top: 0; z-index: 1;}
+        .pagination { margin-top: 20px; }
+        .pagination a { margin: 0 5px; text-decoration: none; color: #007bff; }
+        .pagination a.current { font-weight: bold; color: #333; }
+        .message { color: red; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>KAMCO 공매물건 목록</h1>
+
+    <div th:if="${message}" class="message">
+        <p th:text="${message}"></p>
+    </div>
+
+    <div th:if="${items != null and not #lists.isEmpty(items)}">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>순번(RNUM)</th>
+                        <th>온비드관리번호(onbidNum)</th>
+                        <th>물건명(itemName)</th>
+                        <th>공고번호(PLNM_NO)</th>
+                        <th>공고조건번호(PBCT_CDTN_NO)</th>
+                        <th>물건관리번호(CLTR_NO)</th>
+                        <th>물건이력번호(CLTR_HSTR_NO)</th>
+                        <th>화면그룹코드(SCRN_GRP_CD)</th>
+                        <th>카테고리명(CTGR_FULL_NM)</th>
+                        <th>입찰물건관리번호(BID_MNMT_NO)</th>
+                        <th>물건이름(CLTR_NM)</th>
+                        <th>물건관리번호(CLTR_MNMT_NO)</th>
+                        <th>지번주소(LDNM_ADRS)</th>
+                        <th>도로명주소(NMRD_ADRS)</th>
+                        <th>지번PNU(LDNM_PNU)</th>
+                        <th>처분방식코드(DPSL_MTD_CD)</th>
+                        <th>처분방식명(DPSL_MTD_NM)</th>
+                        <th>최저입찰가격(MIN_BID_PRC)</th>
+                        <th>감정평가평균액(APSL_ASES_AVG_AMT)</th>
+                        <th>수수료율(FEE_RATE)</th>
+                        <th>공고개시일시(PBCT_BEGN_DTM)</th>
+                        <th>공고마감일시(PBCT_CLS_DTM)</th>
+                        <th>공매물건상태명(PBCT_CLTR_STAT_NM)</th>
+                        <th>이용된 입찰건수(USCBD_CNT)</th>
+                        <th>조회수(IQRY_CNT)</th>
+                        <th>상품명(GOODS_NM)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${items}">
+                        <td th:text="${item.RNUM}"></td>
+                        <td th:text="${item.PLNM_NO}"></td>
+                        <td th:text="${item.PBCT_CDTN_NO}"></td>
+                        <td th:text="${item.CLTR_NO}"></td>
+                        <td th:text="${item.CLTR_HSTR_NO}"></td>
+                        <td th:text="${item.SCRN_GRP_CD}"></td>
+                        <td th:text="${item.CTGR_FULL_NM}"></td>
+                        <td th:text="${item.BID_MNMT_NO}"></td>
+                        <td th:text="${item.CLTR_NM}"></td>
+                        <td th:text="${item.CLTR_MNMT_NO}"></td>
+                        <td th:text="${item.LDNM_ADRS}"></td>
+                        <td th:text="${item.NMRD_ADRS}"></td>
+                        <td th:text="${item.LDNM_PNU}"></td>
+                        <td th:text="${item.DPSL_MTD_CD}"></td>
+                        <td th:text="${item.DPSL_MTD_NM}"></td>
+                        <td th:text="${item.MIN_BID_PRC}"></td>
+                        <td th:text="${item.APSL_ASES_AVG_AMT}"></td>
+                        <td th:text="${item.FEE_RATE}"></td>
+                        <td th:text="${item.PBCT_BEGN_DTM}"></td>
+                        <td th:text="${item.PBCT_CLS_DTM}"></td>
+                        <td th:text="${item.PBCT_CLTR_STAT_NM}"></td>
+                        <td th:text="${item.USCBD_CNT}"></td>
+                        <td th:text="${item.IQRY_CNT}"></td>
+                        <td th:text="${item.GOODS_NM}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- 간단한 페이징 처리 예시 -->
+        <div class="pagination" style="margin-top: 20px;">
+            <a th:href="@{/auction(pageNo=${currentPage - 1})}"
+               th:if="${currentPage > 1}" th:text="이전"></a>
+            <span class="current" th:text="${currentPage}"></span>
+            <a th:href="@{/auction(pageNo=${currentPage + 1})}" th:text="다음"></a>
+        </div>
+    </div>
+    <div th:if="${items == null or #lists.isEmpty(items)} and !${message}">
+        <p>조회된 공매 물건이 없습니다.</p>
+    </div>
+
+</body>
+</html>

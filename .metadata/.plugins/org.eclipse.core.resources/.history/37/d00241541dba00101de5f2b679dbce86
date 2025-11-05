@@ -1,0 +1,127 @@
+// src/main/java/com/example/kamco/controller/KamcoController.java
+package com.kmh.kamco.controller;
+
+import com.kmh.kamco.dto.KamcoApiResponse;
+import com.kmh.kamco.dto.Item;
+import com.kmh.kamco.service.KamcoApiService;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class KamcoController2 {
+
+    private final KamcoApiService kamcoApiService;
+
+    // UI에서 한 번에 보여줄 아이템 수 (HTML 페이지 당)
+    private static final int UI_PAGE_SIZE = 50;
+    // KAMCO API 한 번 호출로 받아올 아이템 수
+    private static final int API_NUM_OF_ROWS = 100;
+    // UI 페이지 그룹 당 보여줄 페이지 번호 개수 (예: 1 2 3 4 5)
+    private static final int PAGE_GROUP_SIZE = 5;
+
+    // UI 페이지 하나를 커버하기 위해 필요한 API 호출 횟수 (100 / 50 = 2)
+    private static final int API_CALLS_PER_UI_PAGE_GROUP = API_NUM_OF_ROWS / UI_PAGE_SIZE;
+
+
+    public KamcoController2(KamcoApiService kamcoApiService) {
+        this.kamcoApiService = kamcoApiService;
+    }
+
+    @GetMapping("/")
+    public String index(Model model) {
+        return "redirect:/auction";
+    }
+
+    @GetMapping("/auction")
+    public String getAuctionList(
+            @RequestParam(value = "pageNo", defaultValue = "1") int uiPageNo, // UI 상의 현재 페이지 번호
+            Model model) {
+
+        List<Item> displayedItems = new ArrayList<>();
+        
+        // API 호출을 위한 페이지 번호 계산
+        // uiPageNo 1,2 -> apiPageNo 1
+        // uiPageNo 3,4 -> apiPageNo 2
+        // ...
+        int apiPageNo = ((uiPageNo - 1) / API_CALLS_PER_UI_PAGE_GROUP) + 1;
+        
+        // API 응답에서 데이터를 가져올 때 시작 인덱스 계산
+        int startIndexInApiResult = ((uiPageNo - 1) % API_CALLS_PER_UI_PAGE_GROUP) * UI_PAGE_SIZE;
+        // API 응답에서 데이터를 가져올 때 끝 인덱스 계산 (50개)
+        int endIndexInApiResult = startIndexInApiResult + UI_PAGE_SIZE;
+
+
+        KamcoApiResponse response = kamcoApiService.getAuctionItems(String.valueOf(apiPageNo), String.valueOf(API_NUM_OF_ROWS));
+
+        boolean hasNextPage = false; // 다음 페이지 존재 여부
+
+        if (response != null && response.getHeader() != null) {
+            if ("00".equals(response.getHeader().getResultCode())) {
+                if (response.getBody() != null && response.getBody().getItemList() != null && !response.getBody().getItemList().isEmpty()) {
+                    Map<String, Item> itemMapByRNUM = new LinkedHashMap<>();
+                    for (Item item : response.getBody().getItemList()) {
+                        if (item.getRNUM() != null && !item.getRNUM().isEmpty()) {
+                            itemMapByRNUM.putIfAbsent(item.getRNUM(), item); // 첫 번째 발견된 RNUM만 유지
+                        }
+                    }
+                    List<Item> allFilteredItems = new ArrayList<>(itemMapByRNUM.values());
+                    
+                    // 현재 UI 페이지에 해당하는 데이터를 잘라내기
+                    if (startIndexInApiResult < allFilteredItems.size()) {
+                        int actualEndIndex = Math.min(endIndexInApiResult, allFilteredItems.size());
+                        displayedItems = allFilteredItems.subList(startIndexInApiResult, actualEndIndex);
+
+                        // 다음 페이지가 있는지 판단 (현재 API 응답 내에 다음 50개가 있거나, 다음 API 호출이 필요할 정도로 충분한 데이터가 있을 때)
+                        // 예를 들어, apiPageNo에서 100개를 받아왔는데 uiPageNo 1 (0~49)을 보여줬다면 uiPageNo 2 (50~99)가 가능하고,
+                        // uiPageNo 2 (50~99)를 보여줬다면 다음 apiPageNo를 호출해야 하므로 hasNextPage는 true입니다.
+                        if (uiPageNo < ((itemMapByRNUM.size() / UI_PAGE_SIZE) * API_CALLS_PER_UI_PAGE_GROUP + apiPageNo * API_CALLS_PER_UI_PAGE_GROUP) ) { // 간단하게 다음 페이지가 있을 것으로 예상
+                             hasNextPage = true;
+                        } else if (actualEndIndex < allFilteredItems.size()){ // 현재 API 응답 내에 남아있는 데이터가 더 있다면
+                             hasNextPage = true;
+                        } else if(allFilteredItems.size() == API_NUM_OF_ROWS && uiPageNo % API_CALLS_PER_UI_PAGE_GROUP == 0) { // 현재 API 100건이 가득 찼고, UI 페이지 그룹의 마지막이라면 다음 API 호출이 필요하다고 가정
+                             hasNextPage = true;
+                        } else if (displayedItems.size() == UI_PAGE_SIZE) { // 현재 표시된 항목 수가 50개라면 다음 페이지가 있을 수 있다고 가정
+                             hasNextPage = true;
+                        }
+                        
+                    } else {
+                        displayedItems = new ArrayList<>(); // 현재 페이지에 보여줄 데이터 없음
+                        hasNextPage = false; // 데이터가 없으므로 다음 페이지도 없음
+                    }
+
+                    model.addAttribute("items", displayedItems);
+                } else {
+                    model.addAttribute("message", "조회된 공매 물건이 없습니다.");
+                    hasNextPage = false;
+                }
+            } else if ("99".equals(response.getHeader().getResultCode())) {
+                model.addAttribute("message", response.getHeader().getResultMsg());
+                hasNextPage = false;
+            } else {
+                model.addAttribute("message", "API 호출 실패: " + response.getHeader().getResultMsg());
+                hasNextPage = false;
+            }
+        } else {
+            model.addAttribute("message", "API 호출 실패: 응답을 받지 못했습니다. (네트워크 문제 또는 예상치 못한 서비스 오류)");
+            hasNextPage = false;
+        }
+
+        // 페이지네이션 그룹 계산
+        int startPage = ((uiPageNo - 1) / PAGE_GROUP_SIZE) * PAGE_GROUP_SIZE + 1;
+        int endPage = startPage + PAGE_GROUP_SIZE - 1;
+
+        model.addAttribute("currentPage", uiPageNo);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("hasNextPage", hasNextPage); // 다음 버튼 활성화 여부
+        
+        return "auctionList";
+    }
+}

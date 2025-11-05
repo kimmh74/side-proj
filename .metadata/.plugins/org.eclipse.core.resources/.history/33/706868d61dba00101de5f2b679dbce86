@@ -1,0 +1,18 @@
+// src/main/java/com/kmh/kamco/dto/SearchParams.java
+package com.kmh.kamco.dto;
+
+import lombok.Data; // Lombok 추가
+
+@Data // Getter, Setter, toString, equals, hashCode 자동 생성
+public class SearchParams {
+    private String cltrNm; // 물건이름
+    private String ldnmAdrs; // 지번주소
+    private String ctgrFullNm; // 카테고리명
+    private String cltrMnmtNo; // 물건관리번호
+    private String dpslMtdNm; // 처분방식명
+    private String minBidPrc; // 최저입찰가격 (API 요구사항에 따라 String으로 처리)
+    private String apslAsesAvgAmt; // 감정평가평균액 (API 요구사항에 따라 String으로 처리)
+    private String pbctBegnDtm; // 공고개시일시 (YYYYMMDD)
+    private String pbctCltrStatNm; // 공매물건상태명
+    private String goodsNm; // 상품명
+}

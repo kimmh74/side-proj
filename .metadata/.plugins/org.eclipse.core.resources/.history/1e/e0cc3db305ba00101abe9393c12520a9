@@ -1,0 +1,55 @@
+package com.kmh.kamco.controller;
+
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.kmh.kamco.service.KamcoApiService;
+
+@Controller
+public class KamcoController {
+
+    private final KamcoApiService kamcoApiService;
+
+    public KamcoController(KamcoApiService kamcoApiService) {
+        this.kamcoApiService = kamcoApiService;
+    }
+
+    @GetMapping("/")
+    public String index(Model model) {
+        return "redirect:/auction"; // 기본 경로로 접근 시 공매 목록 페이지로 리다이렉트
+    }
+
+    @GetMapping("/auction")
+    public String getAuctionList(
+            @RequestParam(value = "pageNo", defaultValue = "1") String pageNo,
+            @RequestParam(value = "numOfRows", defaultValue = "10") String numOfRows,
+            Model model) {
+
+        KamcoApiResponse response = kamcoApiService.getAuctionItems(pageNo, numOfRows);
+
+        if (response != null && response.getHeader() != null && "00".equals(response.getHeader().getResultCode())) {
+            // 정상 응답일 경우
+            if (response.getBody() != null && response.getBody().getItemList() != null) {
+                model.addAttribute("items", response.getBody().getItemList());
+            } else {
+                model.addAttribute("message", "조회된 공매 물건이 없습니다.");
+            }
+        } else {
+            // 에러 응답일 경우
+            String errorMessage = "API 호출 실패: ";
+            if (response != null && response.getHeader() != null) {
+                errorMessage += response.getHeader().getResultMsg();
+            } else {
+                errorMessage += "응답을 받지 못했습니다.";
+            }
+            model.addAttribute("message", errorMessage);
+        }
+
+        model.addAttribute("currentPage", pageNo);
+        // 필요에 따라 전체 페이지 수 등 페이징 정보를 추가할 수 있습니다.
+        return "auctionList"; // auctionList.html 템플릿을 렌더링
+    }
+}

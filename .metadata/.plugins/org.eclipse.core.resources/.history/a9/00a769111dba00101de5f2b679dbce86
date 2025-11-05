@@ -1,0 +1,5 @@
+package com.kmh.kamco.dto;
+
+public class SearchParams {
+
+}

@@ -1,0 +1,110 @@
+// src/main/java/com/kmh/kamco/service/KamcoApiService.java
+package com.kmh.kamco.service;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.kmh.kamco.dto.KamcoApiResponse;
+import com.kmh.kamco.dto.SearchParams; // SearchParams DTO 임포트
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+@Service
+public class KamcoApiService {
+
+    @Value("${kamco.api.url}")
+    private String apiUrl;
+
+    @Value("${kamco.api.service-key}")
+    private String serviceKey;
+
+    private final RestTemplate restTemplate;
+    private final XmlMapper xmlMapper;
+
+    public KamcoApiService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        this.xmlMapper = new XmlMapper();
+        this.xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    // API 호출 시 pageNo, numOfRows, SearchParams를 모두 받도록 수정
+    public KamcoApiResponse getAuctionItems(String pageNo, String numOfRows, SearchParams searchParams) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("pageNo", pageNo)
+                .queryParam("numOfRows", numOfRows);
+
+        // --- 검색 파라미터 추가 ---
+        // 각 파라미터가 null이 아니고 비어있지 않으면 쿼리 파라미터로 추가
+        if (searchParams.getCltrNm() != null && !searchParams.getCltrNm().isEmpty()) {
+            uriBuilder.queryParam("CLTR_NM", searchParams.getCltrNm());
+        }
+        if (searchParams.getLdnmAdrs() != null && !searchParams.getLdnmAdrs().isEmpty()) {
+            uriBuilder.queryParam("LDNM_ADRS", searchParams.getLdnmAdrs());
+        }
+        if (searchParams.getCtgrFullNm() != null && !searchParams.getCtgrFullNm().isEmpty()) {
+            uriBuilder.queryParam("CTGR_FULL_NM", searchParams.getCtgrFullNm());
+        }
+        if (searchParams.getCltrMnmtNo() != null && !searchParams.getCltrMnmtNo().isEmpty()) {
+            uriBuilder.queryParam("CLTR_MNMT_NO", searchParams.getCltrMnmtNo());
+        }
+        if (searchParams.getDpslMtdNm() != null && !searchParams.getDpslMtdNm().isEmpty()) {
+            uriBuilder.queryParam("DPSL_MTD_NM", searchParams.getDpslMtdNm());
+        }
+        if (searchParams.getMinBidPrc() != null && !searchParams.getMinBidPrc().isEmpty()) {
+            uriBuilder.queryParam("MIN_BID_PRC", searchParams.getMinBidPrc());
+        }
+        if (searchParams.getApslAsesAvgAmt() != null && !searchParams.getApslAsesAvgAmt().isEmpty()) {
+            uriBuilder.queryParam("APSL_ASES_AVG_AMT", searchParams.getApslAsesAvgAmt());
+        }
+        if (searchParams.getPbctBegnDtm() != null && !searchParams.getPbctBegnDtm().isEmpty()) {
+            uriBuilder.queryParam("PBCT_BEGN_DTM", searchParams.getPbctBegnDtm());
+        }
+        if (searchParams.getPbctCltrStatNm() != null && !searchParams.getPbctCltrStatNm().isEmpty()) {
+            uriBuilder.queryParam("PBCT_CLTR_STAT_NM", searchParams.getPbctCltrStatNm());
+        }
+        if (searchParams.getGoodsNm() != null && !searchParams.getGoodsNm().isEmpty()) {
+            uriBuilder.queryParam("GOODS_NM", searchParams.getGoodsNm());
+        }
+        // -------------------------
+
+        String url = uriBuilder.build().toUriString();
+        System.out.println(">>> KAMCO API 호출 URL: " + url);
+
+        try {
+            String xmlResponse = restTemplate.getForObject(url, String.class);
+
+            if (xmlResponse == null || xmlResponse.isEmpty()) {
+                System.err.println("KAMCO API로부터 빈 응답을 받았습니다.");
+                return null;
+            }
+
+            System.out.println(">>> KAMCO API XML 응답: \n" + xmlResponse);
+
+            return xmlMapper.readValue(xmlResponse, KamcoApiResponse.class);
+
+        } catch (HttpClientErrorException e) {
+            System.err.println("클라이언트 오류 발생 (4xx): " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            return null;
+        } catch (HttpServerErrorException e) {
+            System.err.println("서버 오류 발생 (5xx): " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            return null;
+        } catch (ResourceAccessException e) {
+            System.err.println("네트워크 연결 오류: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            System.err.println("KAMCO API 응답 파싱 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+            KamcoApiResponse errorResponse = new KamcoApiResponse();
+            errorResponse.setHeader(new com.kmh.kamco.dto.Header());
+            errorResponse.getHeader().setResultCode("99");
+            errorResponse.getHeader().setResultMsg("KAMCO API 응답 파싱 오류 발생: " + e.getMessage());
+            return errorResponse;
+        }
+    }
+}
