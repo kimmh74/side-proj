@@ -3,55 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>KAMCO 공매물건 조회</title>
-    <!-- Google Fonts: Noto Sans KR (더 깔끔한 한글 폰트) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome (아이콘 사용을 위해 추가) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
     <style>
-        /* 변수 설정: 재사용성을 높이기 위한 색상 정의 */
-        :root {
-            --primary-color: #4A90E2; /* 산뜻한 파란색 */
-            --primary-dark: #357ABD; /* 더 어두운 파란색 */
-            --accent-color: #6A7E8D; /* 강조색 (진한 회색) */
-            --bg-light: #F8F9FA;    /* 배경 밝은 회색 */
-            --text-dark: #343A40;   /* 어두운 글자색 */
-            --text-light: #F1F3F5;  /* 밝은 글자색 */
-            --border-color: #E0E0E0; /* 테두리색 */
-            --shadow-light: rgba(0, 0, 0, 0.08); /* 가벼운 그림자 */
-            --shadow-medium: rgba(0, 0, 0, 0.15); /* 중간 그림자 */
-        }
-
+        /* (스타일은 이전과 동일하므로 생략 - 이전 버전의 최신 스타일을 그대로 사용) */
         /* 기본 스타일 및 글꼴 설정 */
         body {
-            font-family: 'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+            font-family: 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
             margin: 0;
-            padding: 30px; /* 여백 더 넓게 */
-            background-color: var(--bg-light);
-            color: var(--text-dark);
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #343a40;
             line-height: 1.6;
-            font-size: 15px; /* 기본 폰트 크기 조정 */
-        }
-
-        /* 공통 카드 스타일 (검색 폼, 테이블, 페이지네이션) */
-        .card {
-            background-color: #ffffff;
-            padding: 25px; /* 패딩 증가 */
-            margin-bottom: 30px;
-            border-radius: 10px; /* 더 둥근 모서리 */
-            box-shadow: 0 5px 15px var(--shadow-light); /* 부드러운 그림자 */
-            border: 1px solid var(--border-color); /* 얇은 테두리 */
         }
 
         /* 헤더 스타일 */
         h1 {
-            color: var(--text-dark);
+            color: #212529;
             text-align: center;
-            margin-bottom: 40px;
-            font-size: 2.5em;
-            font-weight: 700; /* Noto Sans KR 굵은 글씨 */
-            padding-bottom: 15px;
-            border-bottom: 3px solid var(--primary-color); /* primary-color 밑줄 */
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            font-weight: bold;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
             display: inline-block;
             width: 100%;
             box-sizing: border-box;
@@ -59,22 +31,26 @@
 
         /* 오류/정보 메시지 스타일 */
         .message {
-            background-color: #ffebee; /* 옅은 붉은색 */
-            color: #d32f2f; /* 진한 붉은색 */
-            border: 1px solid #d32f2f;
+            background-color: #ffe0e0;
+            color: #dc3545;
+            border: 1px solid #dc3545;
             padding: 15px;
-            margin-bottom: 25px;
-            border-radius: 8px;
+            margin-bottom: 20px;
+            border-radius: 5px;
             text-align: center;
-            font-weight: 500;
+            font-weight: bold;
         }
 
         /* 검색 폼 스타일 */
         .search-form {
-            composes: card; /* card 스타일 상속 */
+            background-color: #ffffff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 반응형 컬럼 조정 */
-            gap: 20px; /* 간격 증가 */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
             align-items: end;
         }
 
@@ -84,122 +60,100 @@
         }
 
         .search-item label {
-            font-weight: 500;
-            color: var(--accent-color);
-            margin-bottom: 8px; /* 간격 증가 */
-            font-size: 0.95em;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 0.9em;
         }
 
         .search-item input[type="text"],
-        .search-item input[type="number"] {
-            padding: 10px 12px; /* 패딩 증가 */
-            border: 1px solid var(--border-color);
-            border-radius: 6px; /* 모서리 둥글게 */
-            font-size: 0.95em;
-            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        .search-item input[type="number"],
+        .search-item input[type="date"] {
+            padding: 8px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: border-color 0.2s ease-in-out;
         }
 
         .search-item input:focus {
-            border-color: var(--primary-color);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2); /* 포커스 시 그림자 */
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
 
         .search-buttons {
             grid-column: 1 / -1;
             display: flex;
             justify-content: flex-end;
-            gap: 12px; /* 간격 조정 */
-            margin-top: 15px;
+            gap: 10px;
+            margin-top: 10px;
         }
 
         .search-buttons button {
-            padding: 11px 25px; /* 버튼 크기 조정 */
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 5px;
             font-size: 1em;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            font-weight: 500;
+            transition: background-color 0.2s ease;
         }
 
         .search-buttons button[type="submit"] {
-            background-color: var(--primary-color);
-            color: var(--text-light);
+            background-color: #007bff;
+            color: white;
         }
 
         .search-buttons button[type="submit"]:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px); /* 호버 시 약간 위로 */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #0056b3;
         }
 
         .search-buttons button[type="reset"] {
-            background-color: var(--accent-color);
-            color: var(--text-light);
+            background-color: #6c757d;
+            color: white;
         }
 
         .search-buttons button[type="reset"]:hover {
-            background-color: #5A6A78;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #5a6268;
         }
         
-        /* 상단 가로 스크롤바 컨테이너 */
+        /* 새로운 스타일: 상단 가로 스크롤바 컨테이너 */
         .top-scrollbar-container {
             overflow-x: scroll;
-            height: 12px; /* 높이 약간 줄임 */
-            margin-bottom: 15px; /* 간격 조정 */
-            background-color: #f0f0f0; /* 스크롤바 배경색 */
-            border-radius: 5px;
+            height: 15px;
+            margin-bottom: 10px;
         }
         .top-scrollbar-container > div {
             height: 1px;
         }
-        /* 웹킷 기반 브라우저 스크롤바 커스터마이징 */
-        .top-scrollbar-container::-webkit-scrollbar {
-            height: 8px; /* 스크롤바 두께 */
-        }
-        .top-scrollbar-container::-webkit-scrollbar-track {
-            background: #f1f1f1; /* 스크롤바 트랙 색상 */
-            border-radius: 10px;
-        }
-        .top-scrollbar-container::-webkit-scrollbar-thumb {
-            background: var(--primary-color); /* 스크롤바 핸들 색상 */
-            border-radius: 10px;
-        }
-        .top-scrollbar-container::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-dark); /* 스크롤바 핸들 호버 색상 */
-        }
 
-
-        /* 테이블 컨테이너 스타일 */
+        /* 테이블 컨테이너 스타일 (가로 스크롤을 위해 필요) */
         .table-container {
-            composes: card; /* card 스타일 상속 */
-            padding: 0; /* 테이블 컨테이너 자체의 패딩은 제거 */
             overflow-x: auto;
-            border: none; /* card에서 상속받은 테두리 제거 */
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
         }
 
         /* 테이블 기본 스타일 */
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1000px;
+            min-width: 1000px; /* 컬럼 수 감소에 따라 min-width 조정 */
             white-space: nowrap;
             text-align: left;
-            border-radius: 8px; /* 테이블 자체 모서리 둥글게 */
-            overflow: hidden; /* 모서리 둥글게 처리 시 내용이 넘치지 않도록 */
         }
 
         /* 테이블 헤더 스타일 */
         th {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            padding: 14px 18px; /* 패딩 증가 */
-            border: 1px solid var(--primary-dark); /* 헤더 테두리 */
-            font-weight: 600;
-            text-transform: capitalize; /* 첫 글자만 대문자로 */
+            background-color: #007bff;
+            color: white;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+            font-weight: bold;
+            text-transform: uppercase;
             position: sticky;
             top: 0;
             z-index: 10;
@@ -207,17 +161,12 @@
 
         /* 테이블 데이터 셀 스타일 */
         td {
-            padding: 12px 18px;
-            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
             vertical-align: top;
             max-width: 300px;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: normal; /* 셀 내용이 너무 길 경우 줄바꿈 허용 */
-        }
-        td:first-child {
-            font-weight: bold; /* 첫 번째 컬럼 강조 (순번) */
-            color: var(--primary-dark);
         }
 
         /* 테이블 홀수/짝수 행 배경색 (Zebra striping) */
@@ -226,89 +175,68 @@
         }
 
         tbody tr:nth-child(even) {
-            background-color: #fcfdfe; /* 더 미묘한 차이 */
+            background-color: #f2f2f2;
         }
 
         /* 테이블 행 마우스 오버 시 효과 */
         tbody tr:hover {
-            background-color: #e6f2ff; /* 옅은 파란색 호버 */
-            transform: scale(1.005); /* 약간 확대 */
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 2px 8px var(--shadow-light);
-            z-index: 5; /* 호버 시 z-index 높여 그림자 잘 보이도록 */
+            background-color: #e9ecef;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
-        tbody tr {
-            position: relative; /* z-index 적용을 위해 필요 */
-        }
-
 
         /* 페이지네이션 스타일 */
         .pagination {
-            composes: card; /* card 스타일 상속 */
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-top: 40px;
-            padding: 15px 25px; /* 패딩 조정 */
-            gap: 8px; /* 간격 조정 */
-            box-shadow: 0 5px 15px var(--shadow-light); /* 그림자 */
-            flex-wrap: wrap; /* 반응형: 좁은 화면에서 줄바꿈 */
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        .pagination a, .pagination span {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-width: 38px; /* 최소 너비 */
-            height: 38px; /* 높이 */
+        .pagination a {
             text-decoration: none;
-            color: var(--primary-color);
-            background-color: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 50%; /* 동그란 버튼 */
+            color: #007bff;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
             transition: all 0.2s ease;
-            font-weight: 500;
-            font-size: 0.95em;
+            font-weight: bold;
         }
 
         .pagination a:hover {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            border-color: var(--primary-dark);
-            box-shadow: 0 3px 10px var(--shadow-medium);
+            background-color: #007bff;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
         }
 
         .pagination span.current {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            border-color: var(--primary-dark);
-            font-weight: 700;
-            box-shadow: 0 3px 10px var(--shadow-medium);
-        }
-
-        .pagination a i { /* Font Awesome 아이콘 스타일 */
-            font-size: 0.9em;
+            background-color: #007bff;
+            color: white;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
         }
 
         /* "조회된 공매 물건이 없습니다." 메시지 */
         .no-data-message {
             text-align: center;
-            padding: 60px;
-            font-size: 1.3em;
-            color: var(--accent-color);
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px var(--shadow-light);
-            margin-bottom: 30px;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #6c757d;
         }
-
     </style>
 </head>
 <body>
     <h1>KAMCO 공매물건 목록</h1>
 
     <!-- 검색 폼 시작 -->
-    <form th:action="@{/auction}" method="get" class="search-form card">
+    <form th:action="@{/auction}" method="get" class="search-form">
         <!-- 물건이름 (CLTR_NM) -->
         <div class="search-item">
             <label for="cltrNm">물건이름</label>
@@ -361,8 +289,8 @@
         </div>
 
         <div class="search-buttons">
-            <button type="reset"><i class="fas fa-redo-alt"></i> 초기화</button>
-            <button type="submit"><i class="fas fa-search"></i> 검색</button>
+            <button type="reset">초기화</button>
+            <button type="submit">검색</button>
         </div>
     </form>
     <!-- 검색 폼 끝 -->
@@ -378,39 +306,43 @@
         </div>
         <!-- 상단 가로 스크롤바 끝 -->
 
-        <div id="tableContainer" class="table-container card"> <!-- 테이블 컨테이너도 card 스타일 적용 -->
+        <div id="tableContainer" class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>순번<br>(RNUM)</th>
-                        <th>공고번호<br>(PLNM_NO)</th>
-                        <th>공고조건번호<br>(PBCT_CDTN_NO)</th>
-                        <th>물건관리번호<br>(CLTR_NO)</th>
-                        <th>물건이력번호<br>(CLTR_HSTR_NO)</th>
-                        <th>화면그룹코드<br>(SCRN_GRP_CD)</th>
-                        <th>카테고리명<br>(CTGR_FULL_NM)</th>
-                        <th>입찰물건관리번호<br>(BID_MNMT_NO)</th>
-                        <th>물건이름<br>(CLTR_NM)</th>
-                        <th>물건관리번호<br>(CLTR_MNMT_NO)</th>
-                        <th>지번주소<br>(LDNM_ADRS)</th>
-                        <th>도로명주소<br>(NMRD_ADRS)</th>
-                        <th>지번PNU<br>(LDNM_PNU)</th>
-                        <th>처분방식코드<br>(DPSL_MTD_CD)</th>
-                        <th>처분방식명<br>(DPSL_MTD_NM)</th>
-                        <th>최저입찰가격<br>(MIN_BID_PRC)</th>
-                        <th>감정평가평균액<br>(APSL_ASES_AVG_AMT)</th>
-                        <th>수수료율<br>(FEE_RATE)</th>
-                        <th>공고개시일시<br>(PBCT_BEGN_DTM)</th>
-                        <th>공고마감일시<br>(PBCT_CLS_DTM)</th>
-                        <th>공매물건상태명<br>(PBCT_CLTR_STAT_NM)</th>
-                        <th>이용된 입찰건수<br>(USCBD_CNT)</th>
-                        <th>조회수<br>(IQRY_CNT)</th>
-                        <th>상품명<br>(GOODS_NM)</th>
+                        <th>순번(RNUM)</th>
+                        <!-- <th>온비드관리번호(onbidNum)</th> --> <!-- 삭제됨 -->
+                        <!-- <th>물건명(itemName)</th> --> <!-- 삭제됨 -->
+                        <th>공고번호(PLNM_NO)</th>
+                        <th>공고조건번호(PBCT_CDTN_NO)</th>
+                        <th>물건관리번호(CLTR_NO)</th>
+                        <th>물건이력번호(CLTR_HSTR_NO)</th>
+                        <th>화면그룹코드(SCRN_GRP_CD)</th>
+                        <th>카테고리명(CTGR_FULL_NM)</th>
+                        <th>입찰물건관리번호(BID_MNMT_NO)</th>
+                        <th>물건이름(CLTR_NM)</th>
+                        <th>물건관리번호(CLTR_MNMT_NO)</th>
+                        <th>지번주소(LDNM_ADRS)</th>
+                        <th>도로명주소(NMRD_ADRS)</th>
+                        <th>지번PNU(LDNM_PNU)</th>
+                        <th>처분방식코드(DPSL_MTD_CD)</th>
+                        <th>처분방식명(DPSL_MTD_NM)</th>
+                        <th>최저입찰가격(MIN_BID_PRC)</th>
+                        <th>감정평가평균액(APSL_ASES_AVG_AMT)</th>
+                        <th>수수료율(FEE_RATE)</th>
+                        <th>공고개시일시(PBCT_BEGN_DTM)</th>
+                        <th>공고마감일시(PBCT_CLS_DTM)</th>
+                        <th>공매물건상태명(PBCT_CLTR_STAT_NM)</th>
+                        <th>이용된 입찰건수(USCBD_CNT)</th>
+                        <th>조회수(IQRY_CNT)</th>
+                        <th>상품명(GOODS_NM)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="item : ${items}">
                         <td th:text="${item.RNUM ?: '-'}"></td>
+                        <!-- <td th:text="${item.onbidNum ?: '-'}"></td> --> <!-- 삭제됨 -->
+                        <!-- <td th:text="${item.itemName ?: '-'}"></td> --> <!-- 삭제됨 -->
                         <td th:text="${item.PLNM_NO ?: '-'}"></td>
                         <td th:text="${item.PBCT_CDTN_NO ?: '-'}"></td>
                         <td th:text="${item.CLTR_NO ?: '-'}"></td>
@@ -440,7 +372,7 @@
         </div>
 
         <!-- 페이지네이션 처리 -->
-        <div class="pagination card">
+        <div class="pagination">
             <!-- 이전 페이지 그룹으로 이동 -->
             <a th:href="@{/auction(pageNo=${(startPage - 5 > 0) ? startPage - 5 : 1},
                                      cltrNm=${searchParams.cltrNm}, ldnmAdrs=${searchParams.ldnmAdrs},
@@ -448,7 +380,7 @@
                                      dpslMtdNm=${searchParams.dpslMtdNm}, minBidPrc=${searchParams.minBidPrc},
                                      apslAsesAvgAmt=${searchParams.apslAsesAvgAmt}, pbctBegnDtm=${searchParams.pbctBegnDtm},
                                      pbctCltrStatNm=${searchParams.pbctCltrStatNm}, goodsNm=${searchParams.goodsNm})}"
-               th:if="${startPage > 1}" title="이전 그룹"><i class="fas fa-angle-double-left"></i></a>
+               th:if="${startPage > 1}" th:text="'« 이전'"></a>
 
             <!-- 이전 페이지로 이동 -->
             <a th:href="@{/auction(pageNo=${currentPage - 1},
@@ -457,7 +389,7 @@
                                      dpslMtdNm=${searchParams.dpslMtdNm}, minBidPrc=${searchParams.minBidPrc},
                                      apslAsesAvgAmt=${searchParams.apslAsesAvgAmt}, pbctBegnDtm=${searchParams.pbctBegnDtm},
                                      pbctCltrStatNm=${searchParams.pbctCltrStatNm}, goodsNm=${searchParams.goodsNm})}"
-               th:if="${currentPage > 1}" title="이전 페이지"><i class="fas fa-angle-left"></i></a>
+               th:if="${currentPage > 1}" th:text="'‹'"></a>
 
             <!-- 페이지 번호 목록 -->
             <th:block th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}">
@@ -473,8 +405,7 @@
                    th:unless="${pageNumber == currentPage or (pageNumber > currentPage and !hasNextPage)}"
                    th:text="${pageNumber}"></a>
                 <!-- 다음 페이지로 갈 수 없는데 페이지 번호만 표시되는 경우를 위한 처리: 다음 페이지 번호는 클릭되지 않도록 함 -->
-                <!-- <span th:if="${pageNumber > currentPage and !hasNextPage}" th:text="${pageNumber}"></span> -->
-                <!-- 위 span은 이미 a 태그의 unless 조건에서 처리되므로 중복될 수 있어 주석 처리했습니다. -->
+                <span th:if="${pageNumber > currentPage and !hasNextPage}" th:text="${pageNumber}"></span>
             </th:block>
 
             <!-- 다음 페이지로 이동 -->
@@ -484,7 +415,7 @@
                                      dpslMtdNm=${searchParams.dpslMtdNm}, minBidPrc=${searchParams.minBidPrc},
                                      apslAsesAvgAmt=${searchParams.apslAsesAvgAmt}, pbctBegnDtm=${searchParams.pbctBegnDtm},
                                      pbctCltrStatNm=${searchParams.pbctCltrStatNm}, goodsNm=${searchParams.goodsNm})}"
-               th:if="${hasNextPage}" title="다음 페이지"><i class="fas fa-angle-right"></i></a>
+               th:if="${hasNextPage}" th:text="'›'"></a>
 
             <!-- 다음 페이지 그룹으로 이동 -->
             <a th:href="@{/auction(pageNo=${endPage + 1},
@@ -493,10 +424,10 @@
                                      dpslMtdNm=${searchParams.dpslMtdNm}, minBidPrc=${searchParams.minBidPrc},
                                      apslAsesAvgAmt=${searchParams.apslAsesAvgAmt}, pbctBegnDtm=${searchParams.pbctBegnDtm},
                                      pbctCltrStatNm=${searchParams.pbctCltrStatNm}, goodsNm=${searchParams.goodsNm})}"
-               th:if="${hasNextPage}" title="다음 그룹"><i class="fas fa-angle-double-right"></i></a>
+               th:if="${hasNextPage}" th:text="'다음 »'"></a>
         </div>
     </div>
-    <div th:if="${items == null or #lists.isEmpty(items)} and !${message}" class="no-data-message card"> <!-- No data 메시지도 card 스타일 적용 -->
+    <div th:if="${items == null or #lists.isEmpty(items)} and !${message}" class="no-data-message">
         <p>조회된 공매 물건이 없습니다.</p>
     </div>
 
@@ -505,7 +436,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             var tableContainer = document.getElementById('tableContainer');
             var topScrollbarContainer = document.getElementById('topScrollbarContainer');
-            var topScrollbarContent = topScrollbarContainer ? topScrollbarContainer.querySelector('div') : null;
+            var topScrollbarContent = topScrollbarContainer.querySelector('div');
 
             if (tableContainer && topScrollbarContainer && topScrollbarContent) {
                 // tableContainer의 스크롤 가능한 너비를 상단 스크롤바 콘텐츠에 적용

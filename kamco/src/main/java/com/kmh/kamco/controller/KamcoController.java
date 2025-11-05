@@ -25,13 +25,12 @@ public class KamcoController {
     // UI에서 한 번에 보여줄 아이템 수 (HTML 페이지 당)
     private static final int UI_PAGE_SIZE = 50;
     // KAMCO API 한 번 호출로 받아올 아이템 수
-    private static final int API_NUM_OF_ROWS = 100;
+    private static final int API_NUM_OF_ROWS = 100; // API가 최대로 100건을 줄 수 있음
     // UI 페이지 그룹 당 보여줄 페이지 번호 개수 (예: 1 2 3 4 5)
     private static final int PAGE_GROUP_SIZE = 5;
 
-    // UI 페이지 하나를 커버하기 위해 필요한 API 호출 횟수 (100 / 50 = 2)
-    private static final int API_CALLS_PER_UI_PAGE_GROUP = API_NUM_OF_ROWS / UI_PAGE_SIZE;
-
+    // UI 페이지 하나를 커버하기 위해 필요한 API 호출 횟수 (API_NUM_OF_ROWS / UI_PAGE_SIZE)
+    private static final int API_UI_PAGE_MULTIPLIER = API_NUM_OF_ROWS / UI_PAGE_SIZE; // 100 / 50 = 2
 
     public KamcoController(KamcoApiService kamcoApiService) {
         this.kamcoApiService = kamcoApiService;
@@ -50,20 +49,26 @@ public class KamcoController {
 
         List<Item> displayedItems = new ArrayList<>();
         
-        // 검색이 들어오면 페이지를 1로 초기화 (새로운 검색 결과는 첫 페이지부터 시작)
-        // 단, 이미 검색 중일 때 페이지네이션 이동은 그대로 페이지 번호를 유지해야 함
-        if (searchParams.isAnyFieldPresent() && uiPageNo == 1) { // 검색어가 있고 첫 페이지를 요청한 경우
-             // uiPageNo = 1; // @RequestParam defaultValue로 이미 1이므로 명시적으로 초기화는 필요 없을 수 있습니다.
+        // 검색이 실행되면 uiPageNo를 1로 초기화하여 검색 결과의 첫 페이지부터 시작하도록 유도합니다.
+        // 페이지네이션 클릭 시에는 기존 uiPageNo 유지.
+        int currentPageNumber = uiPageNo;
+        if (searchParams.isAnyFieldPresent() && uiPageNo == 1 && model.getAttribute("isSearch") == null) {
+            // isSearch 속성으로 첫 검색임을 명확히 합니다.
+            model.addAttribute("isSearch", true); 
         }
 
         // API 호출을 위한 페이지 번호 계산
-        int apiPageNo = ((uiPageNo - 1) / API_CALLS_PER_UI_PAGE_GROUP) + 1;
+        // uiPageNo 1,2 -> apiPageNo 1 (API_UI_PAGE_MULTIPLIER = 2이므로)
+        // uiPageNo 3,4 -> apiPageNo 2
+        int apiPageNo = ((currentPageNumber - 1) / API_UI_PAGE_MULTIPLIER) + 1;
         
-        // KamcoApiService 호출 (검색 파라미터는 API로 전달하지 않음)
-        KamcoApiResponse response = kamcoApiService.getAuctionItems(String.valueOf(apiPageNo), String.valueOf(API_NUM_OF_ROWS));
+        KamcoApiResponse response = kamcoApiService.getAuctionItems(
+                String.valueOf(apiPageNo),
+                String.valueOf(API_NUM_OF_ROWS) // 항상 API_NUM_OF_ROWS (100) 만큼 요청
+        );
 
         boolean hasNextPage = false;
-        List<Item> fullyFilteredItems = new ArrayList<>(); // RNUM 중복 제거 & 검색 조건 필터링 완료된 아이템 리스트
+        List<Item> fullyFilteredItems = new ArrayList<>();
 
         if (response != null && response.getHeader() != null) {
             if ("00".equals(response.getHeader().getResultCode())) {
@@ -82,7 +87,6 @@ public class KamcoController {
                     fullyFilteredItems = deduplicatedItems.stream()
                         .filter(item -> {
                             boolean match = true;
-                            // 각 검색 필드에 대해 "contains" 조건 적용 (대소문자 구분 없이)
                             if (searchParams.getCltrNm() != null && !searchParams.getCltrNm().isEmpty()) {
                                 if (item.getCLTR_NM() == null || !item.getCLTR_NM().toLowerCase().contains(searchParams.getCltrNm().toLowerCase())) match = false;
                             }
@@ -98,8 +102,6 @@ public class KamcoController {
                             if (searchParams.getDpslMtdNm() != null && !searchParams.getDpslMtdNm().isEmpty()) {
                                 if (item.getDPSL_MTD_NM() == null || !item.getDPSL_MTD_NM().toLowerCase().contains(searchParams.getDpslMtdNm().toLowerCase())) match = false;
                             }
-                            // 숫자나 날짜 필드는 'contains' 대신 'equals'나 'startsWith'가 더 자연스러울 수 있으나,
-                            // 'contains' 요청에 맞춰 동일하게 처리합니다.
                             if (searchParams.getMinBidPrc() != null && !searchParams.getMinBidPrc().isEmpty()) {
                                 if (item.getMIN_BID_PRC() == null || !item.getMIN_BID_PRC().toLowerCase().contains(searchParams.getMinBidPrc().toLowerCase())) match = false;
                             }
@@ -119,19 +121,25 @@ public class KamcoController {
                         })
                         .collect(Collectors.toList());
 
-                    // --- UI 페이지네이션 적용 (필터링된 결과에 대해) ---
-                    // 현재 API 응답 내에서 UI 페이지를 위한 시작 인덱스와 끝 인덱스 계산
-                    int startIndexForUI = ((uiPageNo - 1) % API_CALLS_PER_UI_PAGE_GROUP) * UI_PAGE_SIZE; // api 응답 내에서 시작
-                    int endIndexForUI = startIndexForUI + UI_PAGE_SIZE;
+                    // 현재 API 호출 범위 내에서 보여줄 UI 페이지의 시작/끝 인덱스 계산
+                    int startIndexForUiPage = ((currentPageNumber - 1) % API_UI_PAGE_MULTIPLIER) * UI_PAGE_SIZE;
+                    int endIndexForUiPage = startIndexForUiPage + UI_PAGE_SIZE;
 
-                    if (startIndexForUI < fullyFilteredItems.size()) {
-                        int actualEndIndex = Math.min(endIndexForUI, fullyFilteredItems.size());
-                        displayedItems = fullyFilteredItems.subList(startIndexForUI, actualEndIndex);
-                        
-                        // 다음 페이지 존재 여부 판단 (추정)
-                        // 현재 표시된 아이템의 수가 UI_PAGE_SIZE와 같으면 다음 페이지가 있을 것으로 추정
-                        hasNextPage = displayedItems.size() == UI_PAGE_SIZE;
+                    if (startIndexForUiPage < fullyFilteredItems.size()) {
+                        int actualEndIndex = Math.min(endIndexForUiPage, fullyFilteredItems.size());
+                        displayedItems = fullyFilteredItems.subList(startIndexForUiPage, actualEndIndex);
+
+                        // 다음 페이지 존재 여부 판단 (좀 더 정확하게 추정)
+                        // 1. 현재 UI 페이지가 꽉 찼고
+                        // 2. 현재 API 응답 내에 다음 UI 페이지를 만들 수 있는 데이터가 더 있거나 (endIndexForUiPage < fullyFilteredItems.size())
+                        // 3. 또는, 현재 UI 페이지가 API 응답의 마지막 UI 페이지 (예: 2페이지)이면서 API 응답 100건이 모두 차 있다면 다음 API 페이지가 있을 수 있음.
+                        hasNextPage = displayedItems.size() == UI_PAGE_SIZE && // 현재 페이지가 꽉 찼고
+                                (endIndexForUiPage < fullyFilteredItems.size() || // 현재 API 응답에 아직 데이터가 남았거나
+                                 (fullyFilteredItems.size() == API_NUM_OF_ROWS && // 현재 API 응답이 최대치 100건이고
+                                  (currentPageNumber % API_UI_PAGE_MULTIPLIER == 0 || API_UI_PAGE_MULTIPLIER == 1))); // 현재 UI 페이지가 해당 API 응답의 마지막 UI 페이지일 때
+                                // 위에 (currentPageNumber % API_UI_PAGE_MULTIPLIER == 0) 조건은 UI 2,4,6 페이지일 때 다음 API 요청이 필요하단 의미.
                     } else {
+                        // 현재 UI 페이지에 보여줄 데이터가 없으면, 다음 페이지도 없음.
                         displayedItems = new ArrayList<>();
                         hasNextPage = false;
                     }
@@ -153,15 +161,26 @@ public class KamcoController {
             hasNextPage = false;
         }
 
-        // 페이지네이션 그룹 계산
-        int startPage = ((uiPageNo - 1) / PAGE_GROUP_SIZE) * PAGE_GROUP_SIZE + 1;
+        // --- 페이지네이션 그룹 계산 로직 수정 ---
+        int startPage = ((currentPageNumber - 1) / PAGE_GROUP_SIZE) * PAGE_GROUP_SIZE + 1;
+        // endPage는 PAGE_GROUP_SIZE 기준으로 일단 계산하되, 실제 nextData 유무에 따라 조정
         int endPage = startPage + PAGE_GROUP_SIZE - 1;
+        
+        // 마지막 페이지 그룹에서 존재하지 않는 페이지 번호를 보여주지 않기 위해 조정
+        // 이 부분은 총 페이지 수를 알 수 없으므로 다음 페이지 존재 여부로 간접적으로만 조정 가능.
+        // 현재 로직에서 hasNextPage가 false라면 endPage는 현재 페이지를 넘어가지 않도록 하는 것이 합리적.
+        // 단, 이는 "5이하는 있는 페이지만 보여줘" 의 모든 케이스를 커버하진 못함. (총 페이지를 알 수 없기 때문)
+        // 가장 안전한 방법은 현재 그룹에 있는 페이지 중, currentPage + (현재 표시된 item 수 < UI_PAGE_SIZE) 인 경우의 페이지까지만 표시.
+        if(!hasNextPage && currentPageNumber < endPage) {
+            endPage = currentPageNumber; // 다음 페이지가 없으면 현재 페이지가 해당 그룹의 마지막일 수 있음
+        }
 
-        model.addAttribute("currentPage", uiPageNo);
+
+        model.addAttribute("currentPage", currentPageNumber);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
-        model.addAttribute("hasNextPage", hasNextPage);
-        model.addAttribute("searchParams", searchParams); // 검색 파라미터를 모델에 추가하여 검색 폼에 유지하고 페이지네이션 링크에도 사용
+        model.addAttribute("hasNextPage", hasNextPage); // 다음 버튼 활성화 여부
+        model.addAttribute("searchParams", searchParams);
         
         return "auctionList";
     }
