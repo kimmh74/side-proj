@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kmh.kamco.mapper.DataMapper">
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="rnum">
+        INSERT INTO datadb (
+            PLNM_NO, PBCT_CDTN_NO, CLTR_NO, CLTR_HSTR_NO, CTGR_FULL_NM, BID_MNMT_NO, CLTR_NM, CLTR_MNMT_NO,
+            LDNM_ADRS, NMRD_ADRS, LDNM_PNU, DPSL_MTD_CD, DPSL_MTD_NM, MIN_BID_PRC, APSL_ASES_AVG_AMT,
+            FEE_RATE, PBCT_BEGN_DTM, PBCT_CLS_DTM, PBCT_CLTR_STAT_NM, USCBD_CNT, IQRY_CNT, GOODS_NM, created_at
+        ) VALUES (
+            #{plnmNo}, #{pbctCdtnNo}, #{cltrNo}, #{cltrHstrNo}, #{ctgrFullNm}, #{bidMnmtNo}, #{cltrNm}, #{cltrMnmtNo},
+            #{ldnmAdrs}, #{nmrdAdrs}, #{ldnmPnu}, #{dpslMtdCd}, #{dpslMtdNm}, #{minBidPrc}, #{apslAsesAvgAmt},
+            #{feeRate}, #{pbctBegnDtm}, #{pbctClsDtm}, #{pbctCltrStatNm}, #{uscbdCnt}, #{iqryCnt}, #{goodsNm}, #{createdAt}
+        )
+    </insert>
+
+    <!-- ★★★ findAll 쿼리 수정: PLNM_NO 중복 제거 로직 추가 ★★★ -->
+    <select id="findAll" resultType="com.kmh.kamco.model.Data">
+        SELECT
+            rnum,
+            plnmNo,
+            pbctCdtnNo,
+            cltrNo,
+            cltrHstrNo,
+            ctgrFullNm,
+            bidMnmtNo,
+            cltrNm,
+            cltrMnmtNo,
+            ldnmAdrs,
+            nmrdAdrs,
+            ldnmPnu,
+            dpslMtdCd,
+            dpslMtdNm,
+            minBidPrc,
+            apslAsesAvgAmt,
+            feeRate,
+            pbctBegnDtm,
+            pbctClsDtm,
+            pbctCltrStatNm,
+            uscbdCnt,
+            iqryCnt,
+            goodsNm,
+            createdAt
+        FROM (
+            SELECT
+                RNUM AS rnum,
+                PLNM_NO AS plnmNo,
+                PBCT_CDTN_NO AS pbctCdtnNo,
+                CLTR_NO AS cltrNo,
+                CLTR_HSTR_NO AS cltrHstrNo,
+                CTGR_FULL_NM AS ctgrFullNm,
+                BID_MNMT_NO AS bidMnmtNo,
+                CLTR_NM AS cltrNm,
+                CLTR_MNMT_NO AS cltrMnmtNo,
+                LDNM_ADRS AS ldnmAdrs,
+                NMRD_ADRS AS nmrdAdrs,
+                LDNM_PNU AS ldnmPnu,
+                DPSL_MTD_CD AS dpslMtdCd,
+                DPSL_MTD_NM AS dpslMtdNm,
+                MIN_BID_PRC AS minBidPrc,
+                APSL_ASES_AVG_AMT AS apslAsesAvgAmt,
+                FEE_RATE AS feeRate,
+                PBCT_BEGN_DTM AS pbctBegnDtm,
+                PBCT_CLS_DTM AS pbctClsDtm,
+                PBCT_CLTR_STAT_NM AS pbctCltrStatNm,
+                USCBD_CNT AS uscbdCnt,
+                IQRY_CNT AS iqryCnt,
+                GOODS_NM AS goodsNm,
+                created_at AS createdAt,
+                -- PLNM_NO를 기준으로 그룹을 나누고, RNUM이 작은 순서대로 순위를 매깁니다.
+                ROW_NUMBER() OVER (PARTITION BY PLNM_NO ORDER BY RNUM ASC) as rn
+            FROM
+                datadb
+        ) AS ranked_data
+        WHERE
+            rn = 1 -- 각 PLNM_NO 그룹에서 첫 번째 (RNUM이 가장 작은) 데이터만 선택합니다.
+    </select>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE datadb;
+    </delete>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM datadb;
+    </select>
+
+</mapper>
