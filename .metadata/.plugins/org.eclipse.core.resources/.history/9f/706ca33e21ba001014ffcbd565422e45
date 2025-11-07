@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>KAMCO 공매물건 조회</title>
+    <!-- Google Fonts: Noto Sans KR (더 깔끔한 한글 폰트) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome (아이콘 사용을 위해 추가) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* 변수 설정: 재사용성을 높이기 위한 색상 정의 */
+        :root {
+            --primary-color: #4A90E2; /* 산뜻한 파란색 */
+            --primary-dark: #357ABD; /* 더 어두운 파란색 */
+            --accent-color: #6A7E8D; /* 강조색 (진한 회색) */
+            --bg-light: #F8F9FA;    /* 배경 밝은 회색 */
+            --text-dark: #343A40;   /* 어두운 글자색 */
+            --text-light: #F1F3F5;  /* 밝은 글자색 */
+            --border-color: #E0E0E0; /* 테두리색 */
+            --shadow-light: rgba(0, 0, 0, 0.08); /* 가벼운 그림자 */
+            --shadow-medium: rgba(0, 0, 0, 0.15); /* 중간 그림자 */
+        }
+
+        /* 기본 스타일 및 글꼴 설정 */
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+            margin: 0;
+            padding: 30px; /* 여백 더 넓게 */
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            font-size: 15px; /* 기본 폰트 크기 조정 */
+        }
+
+        /* 공통 카드 스타일 (검색 폼, 테이블, 페이지네이션) */
+        .card {
+            background-color: #ffffff;
+            padding: 25px; /* 패딩 증가 */
+            margin-bottom: 30px;
+            border-radius: 10px; /* 더 둥근 모서리 */
+            box-shadow: 0 5px 15px var(--shadow-light); /* 부드러운 그림자 */
+            border: 1px solid var(--border-color); /* 얇은 테두리 */
+        }
+
+        /* 헤더 스타일 */
+        h1 {
+            color: var(--text-dark);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            font-weight: 700; /* Noto Sans KR 굵은 글씨 */
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary-color); /* primary-color 밑줄 */
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* 오류/정보 메시지 스타일 */
+        .message {
+            background-color: #ffebee; /* 옅은 붉은색 */
+            color: #d32f2f; /* 진한 붉은색 */
+            border: 1px solid #d32f2f;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* 검색 폼 스타일 */
+        .search-form {
+            composes: card; /* card 스타일 상속 */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 반응형 컬럼 조정 */
+            gap: 20px; /* 간격 증가 */
+            align-items: end;
+        }
+
+        .search-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-item label {
+            font-weight: 500;
+            color: var(--accent-color);
+            margin-bottom: 8px; /* 간격 증가 */
+            font-size: 0.95em;
+        }
+
+        .search-item input[type="text"],
+        .search-item input[type="number"] {
+            padding: 10px 12px; /* 패딩 증가 */
+            border: 1px solid var(--border-color);
+            border-radius: 6px; /* 모서리 둥글게 */
+            font-size: 0.95em;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .search-item input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2); /* 포커스 시 그림자 */
+        }
+
+        .search-buttons {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px; /* 간격 조정 */
+            margin-top: 15px;
+        }
+
+        .search-buttons button {
+            padding: 11px 25px; /* 버튼 크기 조정 */
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            font-weight: 500;
+        }
+
+        .search-buttons button[type="submit"] {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .search-buttons button[type="submit"]:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px); /* 호버 시 약간 위로 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-buttons button[type="reset"] {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .search-buttons button[type="reset"]:hover {
+            background-color: #5A6A78;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 상단 가로 스크롤바 컨테이너 */
+        .top-scrollbar-container {
+            overflow-x: scroll;
+            height: 12px; /* 높이 약간 줄임 */
+            margin-bottom: 15px; /* 간격 조정 */
+            background-color: #f0f0f0; /* 스크롤바 배경색 */
+            border-radius: 5px;
+        }
+        .top-scrollbar-container > div {
+            height: 1px;
+        }
+        /* 웹킷 기반 브라우저 스크롤바 커스터마이징 */
+        .top-scrollbar-container::-webkit-scrollbar {
+            height: 8px; /* 스크롤바 두께 */
+        }
+        .top-scrollbar-container::-webkit-scrollbar-track {
+            background: #f1f1f1; /* 스크롤바 트랙 색상 */
+            border-radius: 10px;
+        }
+        .top-scrollbar-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color); /* 스크롤바 핸들 색상 */
+            border-radius: 10px;
+        }
+        .top-scrollbar-container::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark); /* 스크롤바 핸들 호버 색상 */
+        }
+
+
+        /* 테이블 컨테이너 스타일 */
+        .table-container {
+            composes: card; /* card 스타일 상속 */
+            padding: 0; /* 테이블 컨테이너 자체의 패딩은 제거 */
+            overflow-x: auto;
+            border: none; /* card에서 상속받은 테두리 제거 */
+        }
+
+        /* 테이블 기본 스타일 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+            white-space: nowrap;
+            text-align: left;
+            border-radius: 8px; /* 테이블 자체 모서리 둥글게 */
+            overflow: hidden; /* 모서리 둥글게 처리 시 내용이 

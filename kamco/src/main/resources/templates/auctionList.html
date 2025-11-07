@@ -131,7 +131,7 @@
         .search-buttons button[type="submit"]:hover {
             background-color: var(--primary-dark);
             transform: translateY(-2px); /* 호버 시 약간 위로 */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px var(--shadow-medium);
         }
 
         .search-buttons button[type="reset"] {
@@ -142,7 +142,7 @@
         .search-buttons button[type="reset"]:hover {
             background-color: #5A6A78;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px var(--shadow-medium);
         }
         
         /* 상단 가로 스크롤바 컨테이너 */
@@ -183,13 +183,14 @@
 
         /* 테이블 기본 스타일 */
         table {
-            width: 100%;
+            width: auto; /* <--- 변경: 100% 대신 auto로 변경하여 내용에 따라 유동적 너비 */
+            min-width: 100%; /* <--- 추가: 테이블이 컨테이너보다 작을 때 100% 채움 */
             border-collapse: collapse;
-            min-width: 1000px;
-            white-space: nowrap;
+            /* min-width: 1000px; */ /* <-- 제거: 이 값 대신 auto와 min-width: 100%가 더 유연 */
+            white-space: nowrap; /* <-- 변경: 테이블 자체는 줄바꿈 안 함 (스크롤 용이) */
             text-align: left;
-            border-radius: 8px; /* 테이블 자체 모서리 둥글게 */
-            overflow: hidden; /* 모서리 둥글게 처리 시 내용이 넘치지 않도록 */
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         /* 테이블 헤더 스타일 */
@@ -210,10 +211,10 @@
             padding: 12px 18px;
             border: 1px solid var(--border-color);
             vertical-align: top;
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: normal; /* 셀 내용이 너무 길 경우 줄바꿈 허용 */
+            /* max-width: 300px; */ /* <-- 제거: 내용이 잘리는 것을 막기 위해 */
+            /* overflow: hidden; */ /* <-- 제거: 내용이 잘리는 것을 막기 위해 */
+            /* text-overflow: ellipsis; */ /* <-- 제거: 내용이 잘리는 것을 막기 위해 */
+            white-space: normal; /* <-- 변경: 셀 내부에서는 줄바꿈 허용 */
         }
         td:first-child {
             font-weight: bold; /* 첫 번째 컬럼 강조 (순번) */
@@ -378,7 +379,7 @@
         </div>
         <!-- 상단 가로 스크롤바 끝 -->
 
-        <div id="tableContainer" class="table-container card"> <!-- 테이블 컨테이너도 card 스타일 적용 -->
+        <div id="tableContainer" class="table-container card">
             <table>
                 <thead>
                     <tr>
@@ -387,7 +388,6 @@
                         <th>공고조건번호<br>(PBCT_CDTN_NO)</th>
                         <th>물건관리번호<br>(CLTR_NO)</th>
                         <th>물건이력번호<br>(CLTR_HSTR_NO)</th>
-                        <th>화면그룹코드<br>(SCRN_GRP_CD)</th>
                         <th>카테고리명<br>(CTGR_FULL_NM)</th>
                         <th>입찰물건관리번호<br>(BID_MNMT_NO)</th>
                         <th>물건이름<br>(CLTR_NM)</th>
@@ -415,7 +415,6 @@
                         <td th:text="${item.PBCT_CDTN_NO ?: '-'}"></td>
                         <td th:text="${item.CLTR_NO ?: '-'}"></td>
                         <td th:text="${item.CLTR_HSTR_NO ?: '-'}"></td>
-                        <td th:text="${item.SCRN_GRP_CD ?: '-'}"></td>
                         <td th:text="${item.CTGR_FULL_NM ?: '-'}"></td>
                         <td th:text="${item.BID_MNMT_NO ?: '-'}"></td>
                         <td th:text="${item.CLTR_NM ?: '-'}"></td>
@@ -496,7 +495,7 @@
                th:if="${hasNextPage}" title="다음 그룹"><i class="fas fa-angle-double-right"></i></a>
         </div>
     </div>
-    <div th:if="${items == null or #lists.isEmpty(items)} and !${message}" class="no-data-message card"> <!-- No data 메시지도 card 스타일 적용 -->
+    <div th:if="${items == null or #lists.isEmpty(items)} and !${message}" class="no-data-message card">
         <p>조회된 공매 물건이 없습니다.</p>
     </div>
 

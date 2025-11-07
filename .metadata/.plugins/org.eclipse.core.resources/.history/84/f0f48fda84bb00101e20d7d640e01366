@@ -1,0 +1,11 @@
+spring.application.name=kamco
+
+# application.properties
+kamco.api.url=http://openapi.onbid.co.kr/openapi/services/KamcoPblsalThingInquireSvc/getKamcoPbctCltrList
+kamco.api.service-key=6e7bae62409a5a5669a2a70f78d2b2a53510d4ab5b57d98600ccdaa0c4c14f20
+
+server.port=8090
+
+# MyBatis 설정 추가
+mybatis.mapper-locations=classpath:/mapper/*.xml
+mybatis.configuration.map-underscore-to-camel-case=true # DB 컬럼명 (snake_case)과 DTO 필드명 (camelCase) 자동 매핑

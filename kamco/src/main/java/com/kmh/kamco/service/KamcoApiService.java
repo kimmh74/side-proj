@@ -1,10 +1,6 @@
 // src/main/java/com/kmh/kamco/service/KamcoApiService.java
 package com.kmh.kamco.service;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.kmh.kamco.dto.KamcoApiResponse;
-import com.kmh.kamco.dto.SearchParams; // SearchParams DTO 임포트 (메소드 시그니처에서는 제거될 예정)
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -12,6 +8,10 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.kmh.kamco.dto.KamcoApiResponse;
 
 @Service
 public class KamcoApiService {
